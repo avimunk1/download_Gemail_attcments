@@ -5,16 +5,17 @@ import json
 from datetime import datetime
 
 #Connecting to the server
-#todo get the autonatication data out of the code
+
 imap_host = 'imap.gmail.com'
-imap_user = 'youemail@gmail1.com' #update in config file
+imap_user = 'yourmail@gmail1.com' #update in config file
 imap_pass = 'yourpassword'
 
+config_path = "/Users/avimunk/PycharmProjects/config/Get_gmail/"
 
 
 def get_sender_list():
     sender_list = []
-    filename = "/Users/avimunk/PycharmProjects/config/Get_gmail/sender_list.json"
+    filename = config_path + "sender_list.json"
     with open(filename) as json_data:
         data = json.load(json_data)
     # access the data
@@ -25,7 +26,7 @@ def get_sender_list():
 
 def get_accounts_list():
     account_list = []
-    filename = "/Users/avimunk/PycharmProjects/config/Get_gmail/accounts.json"
+    filename = config_path + "accounts.json"
     with open(filename) as json_data:
         data = json.load(json_data)
     # access the data
