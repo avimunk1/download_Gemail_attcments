@@ -11,7 +11,10 @@ imap_user = 'yourmail@gmail1.com' #update in config file
 imap_pass = 'yourpassword'
 
 config_path = "/Users/avimunk/PycharmProjects/config/Get_gmail/"
-
+out_path = "/Users/avimunk/Documents/bookKeeping/temp/autoinput"
+if not os.path.exists(out_path):
+    print("Folder does not exist, stopping code.")
+    exit()
 
 def get_sender_list():
     sender_list = []
@@ -67,8 +70,6 @@ def download_attcments(sender,user,password):
             if part.get('Content-Disposition') is None:
                 continue
             fileName = part.get_filename()
-            out_path = '/Users/avimunk/Documents/bookKeeping/temp/autoinput'
-            #todo check the file path before starting
             try:
                 if bool(fileName):
                     filePath = os.path.join(out_path, fileName)
