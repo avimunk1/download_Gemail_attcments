@@ -1,3 +1,5 @@
+# this scripts search the inbox for attachments sent from a list of senders and download them to the local computer
+
 import imaplib
 import email
 import os
@@ -53,7 +55,7 @@ def download_attcments(sender,user,password):
 
     #List the folders in the inbox
     imap.select('Inbox')
-    result, data = imap.uid('search', None, '(SENTSINCE 01-Jul-2022 FROM "{}")'.format(sender))
+    result, data = imap.uid('search', None, '(SENTSINCE 01-Jan-2023 FROM "{}")'.format(sender))
     print(result,data)
     #todo set the date from "SENTSINCE" as parm
 
