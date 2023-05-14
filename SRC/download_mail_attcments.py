@@ -4,12 +4,10 @@ import imaplib
 import email
 import os
 import json
-from datetime import datetime
 
-#Connecting to the server
-
+# Connecting to the server
 imap_host = 'imap.gmail.com'
-imap_user = 'yourmail@gmail1.com' #update in config file
+imap_user = 'yourmail@gmail1.com'  # update in config file
 imap_pass = 'yourpassword'
 
 config_path = "/Users/avimunk/PycharmProjects/config/Get_gmail/"
@@ -18,48 +16,47 @@ if not os.path.exists(out_path):
     print("Folder does not exist, stopping code.")
     exit()
 
+
 def get_sender_list():
     sender_list = []
     filename = config_path + "sender_list.json"
     with open(filename) as json_data:
         data = json.load(json_data)
     # access the data
-    for item in data:
-        for i in data:
-            sender_list.append(i)
-        return sender_list
+    # for item in data:
+    for i in data:
+        sender_list.append(i)
+    return sender_list
+
 
 def get_accounts_list():
     account_list = []
     filename = config_path + "accounts.json"
     with open(filename) as json_data:
         data = json.load(json_data)
+
     # access the data
-    for item in data:
-        for i in data:
-            print(i['user'],i['pass'])
-            account_list.append(i)
-        return account_list
+    for i in data:
+        print(i['user'], i['pass'])
+        account_list.append(i)
+    return account_list
 
-
-def download_attcments(sender,user,password):
+def download_attcments(sender, user, password):
     sender = sender
-    #sender = "HOTmobile@printernet.co.il"
     # open a connection
     imap = imaplib.IMAP4_SSL(imap_host)
-
     # login
     imap_user = user
     imap_pass = password
     imap.login(imap_user, imap_pass)
 
-    #List the folders in the inbox
+    # set List of folders in the inbox to search
     imap.select('Inbox')
     result, data = imap.uid('search', None, '(SENTSINCE 01-Jan-2023 FROM "{}")'.format(sender))
-    print(result,data)
-    #todo set the date from "SENTSINCE" as parm
+    print(result, data)
+    print("sender=", sender)
 
-    #Download attachments
+    # find attachments
     for uid in data[0].split():
         result, data = imap.uid('fetch', uid, '(RFC822)')
         raw_email = data[0][1].decode('latin-1')
@@ -71,11 +68,16 @@ def download_attcments(sender,user,password):
                 continue
             if part.get('Content-Disposition') is None:
                 continue
+            # set file name
+            sender_name = sender.split('@')
+            sender_name = sender_name[1]
             fileName = part.get_filename()
+            if type(fileName) == str:
+                sender_name + part.get_filename()
             try:
                 if bool(fileName):
                     filePath = os.path.join(out_path, fileName)
-                    if not os.path.isfile(filePath) :
+                    if not os.path.isfile(filePath):
                         fp = open(filePath, 'w+', encoding='latin-1', buffering=1)
                         fp.write(part.get_payload(decode=True).decode('latin-1'))
                         fp.close()
@@ -85,10 +87,12 @@ def download_attcments(sender,user,password):
                 fp = open(filePath, 'w+', encoding='latin-1', buffering=1)
                 fp.write(part.get_payload(decode=True).decode('latin-1'))
                 fp.close()
-                counter = counter +1
+                counter = counter + 1
 
-    #Logout from the server
+    # Logout from the server
     imap.logout()
+
+
 def main():
     accounts = get_accounts_list()
     for i in accounts:
@@ -96,11 +100,10 @@ def main():
         user = i['user']
         password = i['pass']
         sender_list = get_sender_list()
-        #print("this is the list", sender_list)
+        # print("this is the list", sender_list)
         for i in sender_list:
             print(i)
-            download_attcments(i,user,password)
+            download_attcments(i, user, password)
 
 
 main()
-
