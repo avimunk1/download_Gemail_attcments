@@ -28,7 +28,7 @@ if not os.path.exists(out_path):
 
 def get_sender_list():
     sender_list = []
-    filename = config_path + "sender_list_2.json"
+    filename = config_path + "sender_list.json"
     with open(filename) as json_data:
         data = json.load(json_data)
     # access the data
@@ -62,9 +62,6 @@ def download_attcments(sender, user, password):
     # set List of folders in the inbox to search
     imap.select('Inbox')
     result, data = imap.uid('search', None, '(SENTSINCE {} FROM "{}")'.format(imap_date_str, sender))
-    #result, data = imap.uid('search', None, '(SENTSINCE 01-Jul-2023 FROM "{}")'.format(sender))
-    print(result, data)
-    print("sender=", sender)
 
     # find attachments
     for uid in data[0].split():
@@ -77,10 +74,11 @@ def download_attcments(sender, user, password):
         for part in email_message.walk():
             if part.get_content_maintype() == 'multipart':
                 continue
-            if part.get('Content-Disposition') is not None:
+            if part.get('Content-Disposition') is not None and part.get_filename() is not None:
                 has_attachments = True
         # download attachment
         if has_attachments:
+            print("has attachments")
             for part in email_message.walk():
                 if part.get_content_maintype() == 'multipart':
                     continue
@@ -90,50 +88,29 @@ def download_attcments(sender, user, password):
                 sender_name = sender.split('@')
                 sender_name = sender_name[1]
                 fileName = part.get_filename()
-                fileName = fileName + str(random.randint(0, 9999)) + ".pdf"
 
+                fileName = sender_name + fileName + str(random.randint(0, 9999)) + ".pdf"
+                print(fileName)
                 if type(fileName) == str:
                     sender_name + fileName
-                    print("get_filename=", fileName)
                 try:
                     if bool(fileName):
                         filePath = os.path.join(out_path, fileName)
                         if not os.path.isfile(filePath):
-                            print("enter to if not with filepath=",filePath)
                             fp = open(filePath, 'w+', encoding='latin-1', buffering=1)
                             fp.write(part.get_payload(decode=True).decode('latin-1'))
                             fp.close()
                 except:
-                    print("entering exception")
                     tesxtcounter = str(counter)
                     filePath = os.path.join(out_path, tesxtcounter + ".pdf")
                     fp = open(filePath, 'w+', encoding='latin-1', buffering=1)
                     fp.write(part.get_payload(decode=True).decode('latin-1'))
                     fp.close()
                     counter = str(random.randint(0, 9999))
-                    # If no attachments, process the email body
-                    if not has_attachments:
-                        body = ""
-                        if email_message.is_multipart():
-                            for part in email_message.walk():
-                                ctype = part.get_content_type()
-                                cdispo = str(part.get('Content-Disposition'))
-
-                                # skip any text/plain (txt) attachments
-                                if ctype == 'text/plain' and 'attachment' not in cdispo:
-                                    body = part.get_payload(decode=True)  # decode
-                                    break
-                                # not multipart - i.e. plain text, no attachments, keeping fingers crossed
-                        else:
-                            body = email_message.get_payload(decode=True)
-
-                        # Save the body content to a file
-                        file_name = "email_body_" + str(random.randint(0, 9999)) + ".txt"
-                        file_path = os.path.join(out_path, file_name)
-                        with open(file_path, 'w', encoding='utf-8') as file:
-                            file.write(body.decode('utf-8'))
-
+        # If no attachments, process the email body
         if not has_attachments:
+            fileName = str(random.randint(0, 9999)) + ".pdf"
+            print("no attachments",fileName)
             body = ""
             if email_message.is_multipart():
                 for part in email_message.walk():
@@ -152,11 +129,15 @@ def download_attcments(sender, user, password):
 
             # Check if body is bytes and decode if necessary
             if isinstance(body, bytes):
-                body = body.decode('utf-8')
+                try:
+                    body = body.decode('utf-8')
+                except:
+                    print("error decoding body",fileName)
+                    continue
 
             # Save the body content to a file
-            print("sender=", sender)
-            file_name = "email_body_" +sender + str(random.randint(0, 9999))
+            file_name = "email_body_" + sender + str(random.randint(0, 9999))
+            ctype = part.get_content_type()
             if ctype == 'text/html':
                 pdf_file_name = file_name + ".pdf"
                 pdf_file_path = os.path.join(out_path, pdf_file_name)
